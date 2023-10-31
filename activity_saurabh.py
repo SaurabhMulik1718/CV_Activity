@@ -81,37 +81,3 @@ if uploaded_image is not None:
             st.warning('Invalid image format. Please upload a valid image file.')
     except Exception as e:
         st.error(f'An error occurred: {str(e)}')
-
-# Create a Streamlit column layout to mimic the CSS code
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.markdown(
-        """
-        <style>
-        .footer {
-          position: fixed;
-          left: 0;
-          bottom: 0;
-          width: 100%;
-          background-color: #445c5a;
-          color: white;
-          text-align: center;
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown(
-        """
-        <div class="footer">
-            <h3 style="text-transform: uppercase;">Developers</h3>
-            <ul style="list-style-type: none; padding: 0;">
-                <li>
-                    <a href="/saurabh" style="color: white; text-decoration: none;">Saurabh Mulik</a>
-                </li>
-            </ul>
-            <divstyle => &copy; 2023 PixelPerfect . All rights reserved. </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
