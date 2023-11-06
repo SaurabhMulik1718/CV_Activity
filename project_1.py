@@ -71,8 +71,8 @@ st.write("""
     3. Choose a filter to apply from the "Apply Filters" section.
     """)
 
-if not os.path.exists("uploads"):
-    os.mkdir("uploads")
+# if not os.path.exists("uploads"):
+#     os.mkdir("uploads")
 
 # Upload and display images
 st.header("Upload Images")

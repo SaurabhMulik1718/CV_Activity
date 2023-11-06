@@ -1,11 +1,48 @@
 import streamlit as st
-from PIL import Image, ImageFilter, ImageEnhance
-import io
+from PIL import Image, ImageOps,ImageEnhance
 import numpy as np
-import os
 import cv2
 
 # FILTER
+
+# Sepia Filter Function
+def apply_sepia_filter(image):
+    kernel = np.array([[0.272, 0.534, 0.131],
+                      [0.349, 0.686, 0.168],
+                      [0.393, 0.769, 0.189]])
+    sepia_image = cv2.transform(image, kernel)
+    return Image.fromarray(sepia_image)
+
+# Blur Filter Function
+def apply_blur_filter(image):
+    blurred_image = cv2.GaussianBlur(image, (11, 11), 0)
+    return Image.fromarray(blurred_image)
+
+# Invert Filter Function
+def apply_invert_filter(image):
+    inverted_image = cv2.bitwise_not(image)
+    return Image.fromarray(inverted_image)
+
+# Edge Detection (Canny) Filter Function
+def apply_edge_detection_filter(image):
+    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    edges = cv2.Canny(gray_image, 100, 200)
+    return Image.fromarray(edges, 'L')
+
+# Emboss Filter Function
+def apply_emboss_filter(image):
+    kernel = np.array([[-2, -1, 0], [-1, 1, 1], [0, 1, 2]])
+    embossed_image = cv2.filter2D(image, -1, kernel)
+    return Image.fromarray(embossed_image)
+
+# Sharpening Filter Function
+def apply_sharpening_filter(image):
+    kernel = np.array([[0, -1, 0], [-1, 5,-1], [0, -1, 0]])
+    sharpened_image = cv2.filter2D(image, -1, kernel)
+    return Image.fromarray(sharpened_image)
+
+# END FILTER
+
 
 # Sepia Filter Function
 def apply_sepia_filter(image):
@@ -65,219 +102,206 @@ st.subheader("Upload an image to get started 🚀")
 
 # Display the Streamlit app
 st.write("""
-    **Instructions**:
+    Instructions:
     1. Upload images using the "Upload Images" section.
     2. Select an image from the collection.
     3. Choose a filter to apply from the "Apply Filters" section.
     """)
 
-
-
-# Upload and display images
-st.header("Upload Images")
-
-uploaded_image = st.file_uploader("Upload your images", type=["jpg", "png"], accept_multiple_files=True)
+# Upload an image
+uploaded_image = st.file_uploader('Upload an image', type=['jpg', 'png', 'jpeg'])
 
 if uploaded_image is not None:
-    st.sidebar.header("Editing panel")
-    left_column, right_column = st.columns(2)
-    selected_image = uploaded_image
-    # SETTING 
-    # writing settings code
-    st.sidebar.write("Settings")
-    setting_sharp = st.sidebar.slider("Sharpness", 0.0, 3.0, step=0.5)
-    setting_color = st.sidebar.slider("Color Intensity", 0.0, 3.0, step=0.5)
-    setting_brightness = st.sidebar.slider("Brightness", 0.0, 3.0, step=0.5)
-    setting_contrast = st.sidebar.slider("Contrast", 0.0, 3.0, step=0.5)
+    try:
+        # Use PIL to open the uploaded image
+        image = Image.open(uploaded_image)
 
-    setting_flip_image = st.sidebar.selectbox("Flip Image", options=(
-        "select flip direction", "FLIP_TOP_BOTTOM", "FLIP_LEFT_RIGHT","ROTATE_90","ROTATE_180","ROTATE_270"))
+        if image is not None:
+            # Display the original image
+            left_column, right_column = st.columns(2)
+            with left_column:
+                st.header("Original Image")
+                st.image(image, use_column_width=True, caption='Original Image')
+            with right_column:
+                st.header("Output Image")
+            # writing settings code
+            st.sidebar.write("Settings")
+            setting_sharp = st.sidebar.slider("Sharpness", 0.0, 3.0, step=0.5)
+            setting_color = st.sidebar.slider("Color Intensity", 0.0, 3.0, step=0.5)
+            setting_brightness = st.sidebar.slider("Brightness", 0.0, 3.0, step=0.5)
+            setting_contrast = st.sidebar.slider("Contrast", 0.0, 3.0, step=0.5)
 
-    # FILTER OPTIONS
-    st.sidebar.write("Filters")
-    fiiter_Grayscale = st.sidebar.checkbox("Grayscale")
-    filter_Sepia = st.sidebar.checkbox("Sepia")
-    filter_blur = st.sidebar.checkbox("Blur")
-    filter_Invert = st.sidebar.checkbox("Invert")
-    filter_Edge_Detection = st.sidebar.checkbox("Edge Detection")
-    filter_Emboss = st.sidebar.checkbox("Emboss")
-    filter_Sharpen = st.sidebar.checkbox("Sharpening")
+            setting_flip_image = st.sidebar.selectbox("Flip Image", options=(
+                "select flip direction", "FLIP_TOP_BOTTOM", "FLIP_LEFT_RIGHT","ROTATE_90","ROTATE_180","ROTATE_270"))
 
-     # adding grain effect to the sidebar
-    st.sidebar.write("Grain Effect")
-    grain_intensity = st.sidebar.slider("Intensity", 0, 100, 0)
+            # FILTER OPTIONS
+            st.sidebar.write("Filters")
+            fiiter_Grayscale = st.sidebar.checkbox("Grayscale")
+            filter_Sepia = st.sidebar.checkbox("Sepia")
+            filter_blur = st.sidebar.checkbox("Blur")
+            filter_Invert = st.sidebar.checkbox("Invert")
+            filter_Edge_Detection = st.sidebar.checkbox("Edge Detection")
+            filter_Emboss = st.sidebar.checkbox("Emboss")
+            filter_Sharpen = st.sidebar.checkbox("Sharpening")
 
+            # adding grain effect to the sidebar
+            st.sidebar.write("Grain Effect")
+            grain_intensity = st.sidebar.slider("Intensity", 0, 100, 0)
 
-    # ADD TEXT
+            # checking setting_sharp value
+            if setting_sharp:
+                sharp_value = setting_sharp
+            else:
+                sharp_value = 0
 
+            # checking color
+            if setting_color:
+                set_color = setting_color
+            else:
+                set_color = 1
 
+            # checking brightness
+            if setting_brightness:
+                set_brightness = setting_brightness
+            else:
+                set_brightness = 1
 
-
-    select_img =  Image.open(uploaded_image)
-    
-    with left_column:
-        st.header("Original Image")
-        st.image(uploaded_image, use_column_width=True, caption="Input Image")
-    with right_column:
-        st.header("Output Image")
+            # checking contrast
+            if setting_contrast:
+                set_contrast = setting_contrast
+            else:
+                set_contrast = 1    
             
-    # checking setting_sharp value
-    if setting_sharp:
-        sharp_value = setting_sharp
-    else:
-        sharp_value = 0
+            # checking setting_flip_image
+            flip_direction = setting_flip_image
 
-    # checking color
-    if setting_color:
-        set_color = setting_color
-    else:
-        set_color = 1
+            # implementing sharpness
+            sharp = ImageEnhance.Sharpness(image)
+            edited_img = sharp.enhance(sharp_value)
 
-    # checking brightness
-    if setting_brightness:
-        set_brightness = setting_brightness
-    else:
-        set_brightness = 1
+            # implementing colors
+            color = ImageEnhance.Color(edited_img)
+            edited_img = color.enhance(set_color)
 
-    # checking contrast
-    if setting_contrast:
-        set_contrast = setting_contrast
-    else:
-        set_contrast = 1    
-    
-    # checking setting_flip_image
-    flip_direction = setting_flip_image
+            # implementing brightness
+            brightness = ImageEnhance.Brightness(edited_img)
+            edited_img = brightness.enhance(set_brightness)
 
-    # implementing sharpness
-    sharp = ImageEnhance.Sharpness(select_img)
-    edited_img = sharp.enhance(sharp_value)
+            # implementing contrast
+            contrast = ImageEnhance.Contrast(edited_img)
+            edited_img = contrast.enhance(set_contrast)
 
-    # implementing colors
-    color = ImageEnhance.Color(edited_img)
-    edited_img = color.enhance(set_color)
+            # implementing flip direction
+            if flip_direction == "FLIP_TOP_BOTTOM":
+                edited_img = edited_img.transpose(Image.FLIP_TOP_BOTTOM)
+            elif flip_direction == "FLIP_LEFT_RIGHT":
+                edited_img = edited_img.transpose(Image.FLIP_LEFT_RIGHT)
+            elif flip_direction == "ROTATE_90":
+                edited_img = edited_img.transpose(Image.ROTATE_90)
+            elif flip_direction == "ROTATE_180":
+                edited_img = edited_img.transpose(Image.ROTATE_180)
+            elif flip_direction == "ROTATE_270":
+                edited_img = edited_img.transpose(Image.ROTATE_270)
+            else:
+                pass
 
-    # implementing brightness
-    brightness = ImageEnhance.Brightness(edited_img)
-    edited_img = brightness.enhance(set_brightness)
+            # implementing filters
+            if fiiter_Grayscale:
+                edited_img = edited_img.convert("L")
+            if filter_Sepia:
+                edited_img = apply_sepia_filter(np.array(edited_img))
 
-    # implementing contrast
-    contrast = ImageEnhance.Contrast(edited_img)
-    edited_img = contrast.enhance(set_contrast)
+            if filter_blur:
+                edited_img = apply_blur_filter(np.array(edited_img))
 
-    # implementing flip direction
-    if flip_direction == "FLIP_TOP_BOTTOM":
-        edited_img = edited_img.transpose(Image.FLIP_TOP_BOTTOM)
-    elif flip_direction == "FLIP_LEFT_RIGHT":
-        edited_img = edited_img.transpose(Image.FLIP_LEFT_RIGHT)
-    elif flip_direction == "ROTATE_90":
-        edited_img = edited_img.transpose(Image.ROTATE_90)
-    elif flip_direction == "ROTATE_180":
-        edited_img = edited_img.transpose(Image.ROTATE_180)
-    elif flip_direction == "ROTATE_270":
-        edited_img = edited_img.transpose(Image.ROTATE_270)
-    else:
-        pass
+            if filter_Invert:
+                edited_img = apply_invert_filter(np.array(edited_img))
 
+            if filter_Edge_Detection:
+                edited_img = apply_edge_detection_filter(np.array(edited_img))
 
-    # implementing filters
-    
+            if filter_Emboss:
+                edited_img = apply_emboss_filter(np.array(edited_img))
 
-    if fiiter_Grayscale:
-        edited_img = edited_img.convert("L")
-    if filter_Sepia:
-        edited_img = apply_sepia_filter(np.array(edited_img))
+            if filter_Sharpen:
+                edited_img = apply_sharpening_filter(np.array(edited_img))
+            # Check if grain effect is applied
+            if grain_intensity > 0:
+                img_array = np.array(edited_img)
+                height, width, a = img_array.shape
 
-    if filter_blur:
-        edited_img = apply_blur_filter(np.array(edited_img))
+                # Generate random noise
+                noise = np.random.randint(-grain_intensity, grain_intensity, (height, width, 3))
 
-    if filter_Invert:
-        edited_img = apply_invert_filter(np.array(edited_img))
+                # Apply noise to the image
+                noisy_img_array = np.clip(img_array + noise, 0, 255).astype(np.uint8)
 
-    if filter_Edge_Detection:
-        edited_img = apply_edge_detection_filter(np.array(edited_img))
+                edited_img = Image.fromarray(noisy_img_array)
+            st.sidebar.write("ADD TEXT")
+            text = st.sidebar.text_input("Text to overlay on the image:")
+            wi,hi = edited_img.size
+            setting_width  = st.sidebar.slider("Width", 0, wi, step=1)
+            setting_height  = st.sidebar.slider("height", 0, hi, step=1)
+            setting_font_scale  = st.sidebar.slider("Font Scale", 0, 10, step=1)
+            setting_font_a  = st.sidebar.slider("RED", 0, 255, step=1)
+            setting_font_b  = st.sidebar.slider("GREEN", 0, 255, step=1)
+            setting_font_c  = st.sidebar.slider("BLUE", 0, 255, step=1)
+            # Calculate the position to place the text (you can adjust this)
+            if setting_width:
+                text_x = setting_width
+            else:
+                text_x = 0
 
-    if filter_Emboss:
-        edited_img = apply_emboss_filter(np.array(edited_img))
+            if setting_width:
+                text_y = setting_height
+            else:
+                text_y = 0
 
-    if filter_Sharpen:
-        edited_img = apply_sharpening_filter(np.array(edited_img))
+            if setting_font_scale:
+                set_font_scale = setting_font_scale
+            else:
+                set_font_scale = 0
+            
+            if setting_font_a:
+                set_font_a = setting_font_a
+            else:
+                set_font_a = 0
+            
+            if setting_font_b:
+                set_font_b = setting_font_b
+            else:
+                set_font_b = 0
 
-    # Check if grain effect is applied
-    if grain_intensity > 0:
-        img_array = np.array(edited_img)
-        height, width, a = img_array.shape
+            if setting_font_c:
+                set_font_c = setting_font_c
+            else:
+                set_font_c = 0
+            
 
-        # Generate random noise
-        noise = np.random.randint(-grain_intensity, grain_intensity, (height, width, 3))
+            if st.sidebar.button("Add Text"):
+                # Convert Image to NumPy array
+                image_np = np.array(edited_img)
+                # Define the font and other text properties
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = set_font_scale
+                font_color = (set_font_a, set_font_b, set_font_c)  
+                font_thickness = 2
 
-        # Apply noise to the image
-        noisy_img_array = np.clip(img_array + noise, 0, 255).astype(np.uint8)
+                
 
-        edited_img = Image.fromarray(noisy_img_array)
+                # Use OpenCV to add the text overlay to the image
+                cv2.putText(image_np, text, (text_x, text_y), font, font_scale, font_color, font_thickness, cv2.LINE_AA)
 
-    st.sidebar.write("ADD TEXT")
-    text = st.sidebar.text_input("Text to overlay on the image:")
-    wi,hi = edited_img.size
-    setting_width  = st.sidebar.slider("Width", 0, wi, step=1)
-    setting_height  = st.sidebar.slider("height", 0, hi, step=1)
-    setting_font_scale  = st.sidebar.slider("Font Scale", 0, 10, step=1)
-    setting_font_a  = st.sidebar.slider("RED", 0, 255, step=1)
-    setting_font_b  = st.sidebar.slider("GREEN", 0, 255, step=1)
-    setting_font_c  = st.sidebar.slider("BLUE", 0, 255, step=1)
-    # Calculate the position to place the text (you can adjust this)
-    if setting_width:
-        text_x = setting_width
-    else:
-        text_x = 0
+                # Convert the NumPy array back to an Image for display
+                edited_img = Image.fromarray(image_np)
+            with right_column:
+                st.image(edited_img, width=400)
 
-    if setting_width:
-        text_y = setting_height
-    else:
-        text_y = 0
-
-    if setting_font_scale:
-        set_font_scale = setting_font_scale
-    else:
-        set_font_scale = 0
-    
-    if setting_font_a:
-        set_font_a = setting_font_a
-    else:
-        set_font_a = 0
-    
-    if setting_font_b:
-        set_font_b = setting_font_b
-    else:
-        set_font_b = 0
-
-    if setting_font_c:
-        set_font_c = setting_font_c
-    else:
-        set_font_c = 0
-    
-
-    if st.sidebar.button("Add Text"):
-        # Convert Image to NumPy array
-        image_np = np.array(edited_img)
-        # Define the font and other text properties
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = set_font_scale
-        font_color = (set_font_a, set_font_b, set_font_c)  
-        font_thickness = 2
-
-        
-
-        # Use OpenCV to add the text overlay to the image
-        cv2.putText(image_np, text, (text_x, text_y), font, font_scale, font_color, font_thickness, cv2.LINE_AA)
-
-        # Convert the NumPy array back to an Image for display
-        edited_img = Image.fromarray(image_np)
-
-    with right_column:
-        st.image(edited_img, width=400)
-
-    st.write(">To download edited image right click and click save image as.")
-
+            st.write(">To download edited image right click and click save image as.")
+        else:
+            st.warning('Invalid image format. Please upload a valid image file.')
+    except Exception as e:
+        st.error(f'An error occurred: {str(e)}')
 
 # Create a Streamlit column layout to mimic the CSS code
 col1, col2, col3, col4 = st.columns(4)
