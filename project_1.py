@@ -39,7 +39,7 @@ def apply_emboss_filter(image):
 
 # Sharpening Filter Function
 def apply_sharpening_filter(image):
-    kernel = np.array([[0, -1, 0], [-1, 5,-1], [0, -1, 0]])
+    kernel = np.array([[0, -1, 0], [-1, 5,-1], [0, -1, 0])
     sharpened_image = cv2.filter2D(image, -1, kernel)
     return Image.fromarray(sharpened_image)
 
@@ -58,41 +58,24 @@ st.markdown(
 )
 
 st.header("Your Ultimate Image Enhancement Tool ")
-st.subheader("Upload an image to get started 🚀")
-
-
-
+st.subheader("Select an image to get started 🚀")
 
 # Display the Streamlit app
 st.write("""
     **Instructions**:
-    1. Upload images using the "Upload Images" section.
-    2. Select an image from the collection.
-    3. Choose a filter to apply from the "Apply Filters" section.
+    1. Choose an image from your computer using the "Select an image" section.
+    2. Edit and enhance the image using the options in the sidebar.
     """)
 
-if not os.path.exists("uploads"):
-    os.mkdir("uploads")
+# Allow users to select an image from their local file system
+selected_image = st.file_uploader("Select an image:", type=["jpg", "png"])
 
-# Upload and display images
-st.header("Upload Images")
-
-uploaded_images = st.file_uploader("Upload your images", type=["jpg", "png"], accept_multiple_files=True)
-image_list = []
-
-if uploaded_images:
-    for image in uploaded_images:
-        image_list.append(image)
-        # img = Image.open(image)
-        # st.image(img, caption=image.name, use_column_width=True)
-    
-
-if image_list:
+if selected_image:
     st.sidebar.header("Editing panel")
     left_column, right_column = st.columns(2)
-    selected_image = st.selectbox("Select an image:", [image.name for image in image_list])
-    # SETTING 
-    # writing settings code
+
+    # SETTING
+    # Writing settings code
     st.sidebar.write("Settings")
     setting_sharp = st.sidebar.slider("Sharpness", 0.0, 3.0, step=0.5)
     setting_color = st.sidebar.slider("Color Intensity", 0.0, 3.0, step=0.5)
@@ -100,7 +83,7 @@ if image_list:
     setting_contrast = st.sidebar.slider("Contrast", 0.0, 3.0, step=0.5)
 
     setting_flip_image = st.sidebar.selectbox("Flip Image", options=(
-        "select flip direction", "FLIP_TOP_BOTTOM", "FLIP_LEFT_RIGHT","ROTATE_90","ROTATE_180","ROTATE_270"))
+        "Select flip direction", "FLIP_TOP_BOTTOM", "FLIP_LEFT_RIGHT", "ROTATE_90", "ROTATE_180", "ROTATE_270"))
 
     # FILTER OPTIONS
     st.sidebar.write("Filters")
@@ -112,70 +95,118 @@ if image_list:
     filter_Emboss = st.sidebar.checkbox("Emboss")
     filter_Sharpen = st.sidebar.checkbox("Sharpening")
 
-     # adding grain effect to the sidebar
+    # Adding grain effect to the sidebar
     st.sidebar.write("Grain Effect")
     grain_intensity = st.sidebar.slider("Intensity", 0, 100, 0)
 
-
     # ADD TEXT
+    st.sidebar.write("Add Text")
+    text = st.sidebar.text_input("Text to overlay on the image:")
+    wi, hi = edited_img.size
+    setting_width = st.sidebar.slider("Width", 0, wi, step=1)
+    setting_height = st.sidebar.slider("Height", 0, hi, step=1)
+    setting_font_scale = st.sidebar.slider("Font Scale", 0, 10, step=1)
+    setting_font_a = st.sidebar.slider("RED", 0, 255, step=1)
+    setting_font_b = st.sidebar.slider("GREEN", 0, 255, step=1)
+    setting_font_c = st.sidebar.slider("BLUE", 0, 255, step=1)
 
+    # Calculate the position to place the text (you can adjust this)
+    if setting_width:
+        text_x = setting_width
+    else:
+        text_x = 0
 
+    if setting_height:
+        text_y = setting_height
+    else:
+        text_y = 0
 
+    if setting_font_scale:
+        set_font_scale = setting_font_scale
+    else:
+        set_font_scale = 0
 
-    selected_image_path = os.path.join("uploads", selected_image)
-    select_img = Image.open(selected_image_path)
-    
+    if setting_font_a:
+        set_font_a = setting_font_a
+    else:
+        set_font_a = 0
+
+    if setting_font_b:
+        set_font_b = setting_font_b
+    else:
+        set_font_b = 0
+
+    if setting_font_c:
+        set_font_c = setting_font_c
+    else:
+        set_font_c = 0
+
+    if st.sidebar.button("Add Text"):
+        # Convert Image to NumPy array
+        image_np = np.array(edited_img)
+        # Define the font and other text properties
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = set_font_scale
+        font_color = (set_font_a, set_font_b, set_font_c)
+        font_thickness = 2
+
+        # Use OpenCV to add the text overlay to the image
+        cv2.putText(image_np, text, (text_x, text_y), font, font_scale, font_color, font_thickness, cv2.LINE_AA)
+
+        # Convert the NumPy array back to an Image for display
+        edited_img = Image.fromarray(image_np)
+
     with left_column:
         st.header("Original Image")
-        selected_image_path = os.path.join("uploads", selected_image)
-        st.image(selected_image_path, use_column_width=True, caption="Input Image")
+        st.image(selected_image, use_column_width=True, caption="Input Image")
+
     with right_column:
         st.header("Output Image")
-            
-    # checking setting_sharp value
+
+    # Checking setting_sharp value
     if setting_sharp:
         sharp_value = setting_sharp
     else:
         sharp_value = 0
 
-    # checking color
+    # Checking color
     if setting_color:
         set_color = setting_color
     else:
         set_color = 1
 
-    # checking brightness
+    # Checking brightness
     if setting_brightness:
         set_brightness = setting_brightness
     else:
         set_brightness = 1
 
-    # checking contrast
+    # Checking contrast
     if setting_contrast:
         set_contrast = setting_contrast
     else:
-        set_contrast = 1    
-    
-    # checking setting_flip_image
+        set_contrast = 1
+
+    # Checking setting_flip_image
     flip_direction = setting_flip_image
 
-    # implementing sharpness
+    # Implementing sharpness
     sharp = ImageEnhance.Sharpness(select_img)
     edited_img = sharp.enhance(sharp_value)
 
-    # implementing colors
+    # Implementing colors
     color = ImageEnhance.Color(edited_img)
     edited_img = color.enhance(set_color)
 
-    # implementing brightness
+    # Implementing brightness
     brightness = ImageEnhance.Brightness(edited_img)
     edited_img = brightness.enhance(set_brightness)
 
-    # implementing contrast
+    # Implementing contrast
     contrast = ImageEnhance.Contrast(edited_img)
     edited_img = contrast.enhance(set_contrast)
 
-    # implementing flip direction
+    # Implementing flip direction
     if flip_direction == "FLIP_TOP_BOTTOM":
         edited_img = edited_img.transpose(Image.FLIP_TOP_BOTTOM)
     elif flip_direction == "FLIP_LEFT_RIGHT":
@@ -189,9 +220,7 @@ if image_list:
     else:
         pass
 
-
-    # implementing filters
-    
+    # Implementing filters
 
     if fiiter_Grayscale:
         edited_img = edited_img.convert("L")
@@ -226,69 +255,7 @@ if image_list:
 
         edited_img = Image.fromarray(noisy_img_array)
 
-    st.sidebar.write("ADD TEXT")
-    text = st.sidebar.text_input("Text to overlay on the image:")
-    wi,hi = edited_img.size
-    setting_width  = st.sidebar.slider("Width", 0, wi, step=1)
-    setting_height  = st.sidebar.slider("height", 0, hi, step=1)
-    setting_font_scale  = st.sidebar.slider("Font Scale", 0, 10, step=1)
-    setting_font_a  = st.sidebar.slider("RED", 0, 255, step=1)
-    setting_font_b  = st.sidebar.slider("GREEN", 0, 255, step=1)
-    setting_font_c  = st.sidebar.slider("BLUE", 0, 255, step=1)
-    # Calculate the position to place the text (you can adjust this)
-    if setting_width:
-        text_x = setting_width
-    else:
-        text_x = 0
-
-    if setting_width:
-        text_y = setting_height
-    else:
-        text_y = 0
-
-    if setting_font_scale:
-        set_font_scale = setting_font_scale
-    else:
-        set_font_scale = 0
-    
-    if setting_font_a:
-        set_font_a = setting_font_a
-    else:
-        set_font_a = 0
-    
-    if setting_font_b:
-        set_font_b = setting_font_b
-    else:
-        set_font_b = 0
-
-    if setting_font_c:
-        set_font_c = setting_font_c
-    else:
-        set_font_c = 0
-    
-
-    if st.sidebar.button("Add Text"):
-        # Convert Image to NumPy array
-        image_np = np.array(edited_img)
-        # Define the font and other text properties
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = set_font_scale
-        font_color = (set_font_a, set_font_b, set_font_c)  
-        font_thickness = 2
-
-        
-
-        # Use OpenCV to add the text overlay to the image
-        cv2.putText(image_np, text, (text_x, text_y), font, font_scale, font_color, font_thickness, cv2.LINE_AA)
-
-        # Convert the NumPy array back to an Image for display
-        edited_img = Image.fromarray(image_np)
-
-    with right_column:
-        st.image(edited_img, width=400)
-
-    st.write(">To download edited image right click and click save image as.")
-
+    st.write(">To download the edited image, right-click and choose 'Save image as'.")
 
 # Create a Streamlit column layout to mimic the CSS code
 col1, col2, col3, col4 = st.columns(4)
