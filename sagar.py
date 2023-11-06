@@ -71,23 +71,14 @@ st.write("""
     3. Choose a filter to apply from the "Apply Filters" section.
     """)
 
-if not os.path.exists("uploads"):
-    os.mkdir("uploads")
+
 
 # Upload and display images
 st.header("Upload Images")
 
 uploaded_images = st.file_uploader("Upload your images", type=["jpg", "png"], accept_multiple_files=True)
-image_list = []
 
-if uploaded_images:
-    for image in uploaded_images:
-        image_list.append(image)
-        # img = Image.open(image)
-        # st.image(img, caption=image.name, use_column_width=True)
-    
-
-if image_list:
+if uploaded_image is not None:
     st.sidebar.header("Editing panel")
     left_column, right_column = st.columns(2)
     selected_image = st.selectbox("Select an image:", [image.name for image in image_list])
@@ -122,13 +113,11 @@ if image_list:
 
 
 
-    selected_image_path = os.path.join("uploads", selected_image)
-    select_img = Image.open(selected_image_path)
+    select_img =  Image.open(uploaded_image)
     
     with left_column:
         st.header("Original Image")
-        selected_image_path = os.path.join("uploads", selected_image)
-        st.image(selected_image_path, use_column_width=True, caption="Input Image")
+        st.image(uploaded_image, use_column_width=True, caption="Input Image")
     with right_column:
         st.header("Output Image")
             
