@@ -81,7 +81,7 @@ uploaded_image = st.file_uploader("Upload your images", type=["jpg", "png"], acc
 if uploaded_image is not None:
     st.sidebar.header("Editing panel")
     left_column, right_column = st.columns(2)
-    selected_image = st.selectbox("Select an image:", [image.name for image in image_list])
+    selected_image = uploaded_image
     # SETTING 
     # writing settings code
     st.sidebar.write("Settings")
