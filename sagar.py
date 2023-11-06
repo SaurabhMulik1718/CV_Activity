@@ -76,7 +76,7 @@ st.write("""
 # Upload and display images
 st.header("Upload Images")
 
-uploaded_images = st.file_uploader("Upload your images", type=["jpg", "png"], accept_multiple_files=True)
+uploaded_image = st.file_uploader("Upload your images", type=["jpg", "png"], accept_multiple_files=True)
 
 if uploaded_image is not None:
     st.sidebar.header("Editing panel")
